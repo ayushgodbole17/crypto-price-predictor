@@ -1,13 +1,13 @@
 stages:
   - build
   - push
+  - deploy
 
 variables:
   DOCKER_DRIVER: overlay2
 
 before_script:
-  # This ensures Docker is logged in before any job runs
-  - echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin || true
+  - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
 build_image:
   stage: build
@@ -15,7 +15,7 @@ build_image:
   services:
     - docker:dind
   script:
-    - docker build -t pes1ug19cs098/crypto-price-predictor:latest .
+    - docker build -t $DOCKERHUB_USERNAME/crypto-price-predictor:latest .
 
 push_image:
   stage: push
@@ -23,5 +23,20 @@ push_image:
   services:
     - docker:dind
   script:
-    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-    - docker push pes1ug19cs098/crypto-price-predictor:latest
+    - docker push $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+
+deploy_to_ec2:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
+  script:
+    - ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP '
+        docker pull $DOCKERHUB_USERNAME/crypto-price-predictor:latest &&
+        docker stop $(docker ps -q --filter ancestor=$DOCKERHUB_USERNAME/crypto-price-predictor:latest) || true &&
+        docker run -d -p 80:8000 $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+      '
