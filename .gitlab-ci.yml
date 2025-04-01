@@ -24,6 +24,8 @@ push_image:
     - docker:dind
   script:
     - docker push $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+  needs:
+    - build_image
 
 deploy_to_ec2:
   stage: deploy
@@ -40,3 +42,5 @@ deploy_to_ec2:
         docker stop $(docker ps -q --filter ancestor=$DOCKERHUB_USERNAME/crypto-price-predictor:latest) || true &&
         docker run -d -p 80:8000 $DOCKERHUB_USERNAME/crypto-price-predictor:latest
       '
+  needs:
+    - push_image
