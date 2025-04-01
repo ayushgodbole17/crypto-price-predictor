@@ -6,30 +6,38 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
 
-before_script:
-  - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+default:
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
 build_image:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
   script:
     - docker build -t $DOCKERHUB_USERNAME/crypto-price-predictor:latest .
+  artifacts:
+    name: "docker-image"
+    paths:
+      - image.tar
+    expire_in: 15 minutes
+  after_script:
+    - docker save $DOCKERHUB_USERNAME/crypto-price-predictor:latest -o image.tar
 
 push_image:
   stage: push
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker push $DOCKERHUB_USERNAME/crypto-price-predictor:latest
   needs:
     - build_image
+  script:
+    - docker load -i image.tar
+    - docker push $DOCKERHUB_USERNAME/crypto-price-predictor:latest
 
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
+  needs:
+    - push_image
   before_script:
     - apk add --no-cache openssh
     - mkdir -p ~/.ssh
@@ -42,5 +50,3 @@ deploy_to_ec2:
         docker stop $(docker ps -q --filter ancestor=$DOCKERHUB_USERNAME/crypto-price-predictor:latest) || true &&
         docker run -d -p 80:8000 $DOCKERHUB_USERNAME/crypto-price-predictor:latest
       '
-  needs:
-    - push_image
