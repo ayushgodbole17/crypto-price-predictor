@@ -36,8 +36,6 @@ push_image:
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
-  needs:
-    - push_image
   before_script:
     - apk add --no-cache openssh
     - mkdir -p ~/.ssh
@@ -46,7 +44,7 @@ deploy_to_ec2:
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
     - ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP '
-        docker pull $DOCKERHUB_USERNAME/crypto-price-predictor:latest &&
-        docker stop $(docker ps -q --filter ancestor=$DOCKERHUB_USERNAME/crypto-price-predictor:latest) || true &&
-        docker run -d -p 80:8000 $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+        docker pull pes1ug19cs098/crypto-price-predictor:latest &&
+        docker stop $(docker ps -q --filter ancestor=pes1ug19cs098/crypto-price-predictor:latest) || true &&
+        docker run -d -p 80:8000 pes1ug19cs098/crypto-price-predictor:latest
       '
