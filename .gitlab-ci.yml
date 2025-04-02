@@ -38,9 +38,10 @@ deploy_to_ec2:
   image: alpine:latest
   before_script:
     - apk add --no-cache openssh
+    - apk add --no-cache coreutils  # for base64 command
     - mkdir -p ~/.ssh
-    # Remove carriage returns from the SSH key using echo and pipe (compatible with /bin/sh)
-    - echo "$SSH_PRIVATE_KEY" | sed -e 's/\r//g' > ~/.ssh/id_rsa
+    # Decode the base64 variable to create the SSH private key
+    - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
