@@ -39,7 +39,8 @@ deploy_to_ec2:
   before_script:
     - apk add --no-cache openssh
     - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    # Remove any Windows carriage returns from the SSH key before saving it
+    - sed -e 's/\r//g' <<< "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
