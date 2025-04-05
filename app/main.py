@@ -3,7 +3,7 @@ from fastapi import FastAPI, Query
 from app.data_fetcher import fetch_crypto_data
 from app.model import train_model, predict_price
 from prometheus_fastapi_instrumentator import Instrumentator
-
+from prometheus_client import Counter
 
 # Configure logging
 logging.basicConfig(
@@ -16,10 +16,10 @@ app = FastAPI()
 instrumentator = Instrumentator().instrument(app).expose(app)
 
 
-@app.get("/")
-def home():
-    logger.info("Home endpoint accessed")
-    return {"message": "Crypto Price Predictor is up!"}
+
+
+# Define custom counter at the top of your FastAPI file
+prediction_counter = Counter("model_predictions_total", "Total model predictions", ["model_type"])
 
 @app.get("/predict")
 def get_prediction(model_type: str = Query("linear", enum=["linear", "rf"])):
@@ -28,6 +28,10 @@ def get_prediction(model_type: str = Query("linear", enum=["linear", "rf"])):
         data = fetch_crypto_data(days=90)
         model, last_features, train_rmse, test_rmse = train_model(data, model_type=model_type)
         prediction = predict_price(model, last_features)
+
+        # Update Prometheus metric
+        prediction_counter.labels(model_type=model_type).inc()
+
         logger.info(f"Prediction made: {prediction}")
         return {
             "prediction": prediction,
