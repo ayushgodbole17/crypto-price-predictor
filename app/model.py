@@ -4,12 +4,15 @@ import numpy as np
 
 def train_model(data: pd.DataFrame):
     data = data.copy()
-    data['timestamp'] = np.arange(len(data))  # Replacing real timestamps with indices
-    X = data[['timestamp']]
+    # Define the features to use
+    features = ['MA_7', 'MA_30', 'Daily_Return', 'Volatility_7']
+    X = data[features]
     y = data['price']
     model = LinearRegression().fit(X, y)
-    return model, len(data)  # Return model + last timestamp index
+    # Get the last row's feature values to use for prediction
+    last_features = data.iloc[-1][features].values.reshape(1, -1)
+    return model, last_features
 
-def predict_price(model, last_index: int, future_days: int = 1):
-    future_x = [[last_index + future_days]]
-    return model.predict(future_x)[0]
+def predict_price(model, last_features, future_days: int = 1):
+    # For now, we ignore future_days and simply predict using the last available features.
+    return model.predict(last_features)[0]

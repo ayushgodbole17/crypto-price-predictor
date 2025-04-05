@@ -11,6 +11,6 @@ def home():
 @app.get("/predict")
 def get_prediction():
     data = fetch_crypto_data()
-    model, last_index = train_model(data)
-    prediction = predict_price(model, last_index)
+    model, last_features = train_model(data)
+    prediction = predict_price(model, last_features)
     return {"prediction": prediction}
