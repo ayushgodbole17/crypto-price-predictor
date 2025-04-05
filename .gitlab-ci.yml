@@ -35,12 +35,12 @@ push_image:
 
 deploy_to_ec2:
   stage: deploy
-  image: alpine:latest
+  image: ubuntu:20.04
   before_script:
-    - apk add --no-cache openssh coreutils
+    - apt-get update && apt-get install -y openssh-client coreutils
     - mkdir -p ~/.ssh
-    # Decode the base64-encoded key using printf (avoids extra newline issues)
-    - printf "%s" "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
+    # Decode the base64-encoded key into the private key file
+    - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
