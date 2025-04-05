@@ -16,22 +16,25 @@ default:
 build_image:
   stage: build
   script:
-    - docker build -t $DOCKERHUB_USERNAME/crypto-price-predictor:latest .
+    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - docker build -t $IMAGE_NAME .
   artifacts:
     name: "docker-image"
     paths:
       - image.tar
     expire_in: 15 minutes
   after_script:
-    - docker save $DOCKERHUB_USERNAME/crypto-price-predictor:latest -o image.tar
+    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - docker save $IMAGE_NAME -o image.tar
 
 push_image:
   stage: push
   needs:
     - build_image
   script:
+    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
     - docker load -i image.tar
-    - docker push $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+    - docker push $IMAGE_NAME
 
 deploy_to_ec2:
   stage: deploy
@@ -43,10 +46,11 @@ deploy_to_ec2:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
+    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - echo "Deploying image: $IMAGE_NAME"
     - |
-      echo "Deploying image: $IMAGE_NAME"
       ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP "
-        IMAGE_NAME=$IMAGE_NAME
+        IMAGE_NAME=$DOCKERHUB_USERNAME/crypto-price-predictor:latest
         echo 'Checking for container on port 80...';
         existing=\$(docker ps -q --filter 'publish=80');
         if [ -n \"\$existing\" ]; then
