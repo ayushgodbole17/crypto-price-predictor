@@ -8,6 +8,7 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375
 
+# Default configuration applies to build, push, and deploy stages.
 default:
   image: docker:latest
   services:
@@ -15,14 +16,17 @@ default:
   before_script:
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
+# Test Stage: Use a Python image and override the default before_script.
 run_tests:
   stage: test
   image: python:3.10-slim
+  before_script: []  # Override so that docker commands are not run here.
   script:
     - pip install -r requirements.txt
     - pip install pytest
     - pytest --maxfail=1 --disable-warnings -q
 
+# Build Stage: Build the Docker image.
 build_image:
   stage: build
   script:
@@ -36,6 +40,7 @@ build_image:
     - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker save $IMAGE_NAME -o image.tar
 
+# Push Stage: Load the saved image and push it to Docker Hub.
 push_image:
   stage: push
   needs:
@@ -45,6 +50,7 @@ push_image:
     - docker load -i image.tar
     - docker push $IMAGE_NAME
 
+# Deploy Stage: Deploy the image to your EC2 instance.
 deploy_to_ec2:
   stage: deploy
   image: ubuntu:20.04
