@@ -16,15 +16,14 @@ default:
 build_image:
   stage: build
   script:
-    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker build -t $IMAGE_NAME .
   artifacts:
-    name: "docker-image"
     paths:
       - image.tar
     expire_in: 15 minutes
   after_script:
-    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker save $IMAGE_NAME -o image.tar
 
 push_image:
@@ -32,7 +31,7 @@ push_image:
   needs:
     - build_image
   script:
-    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
+    - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker load -i image.tar
     - docker push $IMAGE_NAME
 
@@ -40,29 +39,26 @@ deploy_to_ec2:
   stage: deploy
   image: ubuntu:20.04
   before_script:
-    - apt-get update && apt-get install -y openssh-client coreutils
+    - apt-get update && apt-get install -y openssh-client
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
-    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
-    - |
-      cat <<EOF > deploy.sh
-IMAGE_NAME=${IMAGE_NAME}
-echo "Deploying image: ${IMAGE_NAME}"
-echo "Checking for container on port 80..."
-existing=\$(docker ps -q --filter "publish=80")
-if [ -n "\$existing" ]; then
-  echo "Stopping & removing existing container: \$existing"
-  docker rm -f \$existing
-else
-  echo "No container found using port 80."
-fi
-echo "Pulling updated image..."
-docker pull ${IMAGE_NAME}
-echo "Starting new container..."
-docker run -d -p 80:8000 ${IMAGE_NAME}
-EOF
-    - chmod +x deploy.sh
-    - ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP 'bash -s' < deploy.sh
+    - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
+    - >
+      echo "IMAGE_NAME=${IMAGE_NAME}" > deploy.sh &&
+      echo "echo 'Checking for container on port 80...'" >> deploy.sh &&
+      echo "existing=\$(docker ps -q --filter 'publish=80')" >> deploy.sh &&
+      echo "if [ -n \"\$existing\" ]; then" >> deploy.sh &&
+      echo "  echo 'Stopping & removing existing container: \$existing'" >> deploy.sh &&
+      echo "  docker rm -f \$existing" >> deploy.sh &&
+      echo "else" >> deploy.sh &&
+      echo "  echo 'No container found using port 80.'" >> deploy.sh &&
+      echo "fi" >> deploy.sh &&
+      echo "echo 'Pulling updated image...'" >> deploy.sh &&
+      echo "docker pull \$IMAGE_NAME" >> deploy.sh &&
+      echo "echo 'Starting new container...'" >> deploy.sh &&
+      echo "docker run -d -p 80:8000 \$IMAGE_NAME" >> deploy.sh &&
+      chmod +x deploy.sh &&
+      ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP 'bash -s' < deploy.sh
