@@ -6,8 +6,8 @@ stages:
 
 variables:
   DOCKER_DRIVER: overlay2
+  PYTHONPATH: "$CI_PROJECT_DIR"  # Add the project root to PYTHONPATH
 
-# Test Stage: Run automated tests using pytest
 run_tests:
   stage: test
   image: python:3.10-slim
@@ -16,9 +16,11 @@ run_tests:
     - pip install pytest
     - pytest --maxfail=1 --disable-warnings -q
 
-# Build Stage: Build the Docker image and save it as an artifact
 build_image:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
   script:
     - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker build -t $IMAGE_NAME .
@@ -30,9 +32,9 @@ build_image:
     - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker save $IMAGE_NAME -o image.tar
 
-# Push Stage: Load the artifact and push the image to Docker Hub
 push_image:
   stage: push
+  image: docker:latest
   needs:
     - build_image
   script:
@@ -40,7 +42,6 @@ push_image:
     - docker load -i image.tar
     - docker push $IMAGE_NAME
 
-# Deploy Stage: Deploy the new image to your EC2 instance
 deploy_to_ec2:
   stage: deploy
   image: ubuntu:20.04
