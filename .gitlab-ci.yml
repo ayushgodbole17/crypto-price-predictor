@@ -6,7 +6,14 @@ stages:
 
 variables:
   DOCKER_DRIVER: overlay2
-  PYTHONPATH: "$CI_PROJECT_DIR"  # Add the project root to PYTHONPATH
+  DOCKER_HOST: tcp://docker:2375
+
+default:
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
 run_tests:
   stage: test
@@ -18,9 +25,6 @@ run_tests:
 
 build_image:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
   script:
     - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
     - docker build -t $IMAGE_NAME .
@@ -34,7 +38,6 @@ build_image:
 
 push_image:
   stage: push
-  image: docker:latest
   needs:
     - build_image
   script:
