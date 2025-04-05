@@ -39,13 +39,21 @@ deploy_to_ec2:
   before_script:
     - apt-get update && apt-get install -y openssh-client coreutils
     - mkdir -p ~/.ssh
-    # Decode the base64-encoded key into the private key file
+    # Decode the base64 SSH key and save it as the private key
     - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
-    - ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP '
-        docker pull pes1ug19cs098/crypto-price-predictor:latest &&
-        docker stop $(docker ps -q --filter ancestor=pes1ug19cs098/crypto-price-predictor:latest) || true &&
+    - |
+      ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP '
+        container=$(docker ps -q --filter ancestor=pes1ug19cs098/crypto-price-predictor:latest);
+        if [ -n "$container" ]; then
+          echo "Stopping existing container $container";
+          docker stop $container && docker rm $container;
+        else
+          echo "No container found to stop.";
+        fi;
+        echo "Running new container...";
         docker run -d -p 80:8000 pes1ug19cs098/crypto-price-predictor:latest
       '
+
