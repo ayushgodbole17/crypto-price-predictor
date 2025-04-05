@@ -46,23 +46,18 @@ deploy_to_ec2:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IP >> ~/.ssh/known_hosts
   script:
-    - IMAGE_NAME="$DOCKERHUB_USERNAME/crypto-price-predictor:latest"
-    - echo "Deploying image: $IMAGE_NAME"
-    - |
-      ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP "
-        IMAGE_NAME=$DOCKERHUB_USERNAME/crypto-price-predictor:latest
-        echo 'Checking for container on port 80...';
-        existing=\$(docker ps -q --filter 'publish=80');
-        if [ -n \"\$existing\" ]; then
-          echo 'Stopping & removing existing container: \$existing';
-          docker rm -f \$existing;
-        else
-          echo 'No container found using port 80.';
-        fi;
+    - echo "echo 'Checking for container on port 80...'
+      existing=\$(docker ps -q --filter 'publish=80')
+      if [ -n \"\$existing\" ]; then
+        echo 'Stopping & removing existing container: \$existing'
+        docker rm -f \$existing
+      else
+        echo 'No container found using port 80.'
+      fi
+      echo 'Pulling latest image...'
+      docker pull $DOCKERHUB_USERNAME/crypto-price-predictor:latest
+      echo 'Starting container...'
+      docker run -d -p 80:8000 $DOCKERHUB_USERNAME/crypto-price-predictor:latest" > deploy.sh
 
-        echo 'Pulling updated image...';
-        docker pull \$IMAGE_NAME;
-
-        echo 'Running new container...';
-        docker run -d -p 80:8000 \$IMAGE_NAME;
-      "
+    - chmod +x deploy.sh
+    - ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP 'bash -s' < deploy.sh
