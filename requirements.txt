@@ -5,3 +5,4 @@ pandas
 scikit-learn
 prometheus_fastapi_instrumentator
 pytest
+httpx
