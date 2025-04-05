@@ -2,7 +2,9 @@ fastapi
 uvicorn[standard]
 requests
 pandas
+numpy
 scikit-learn
 prometheus_fastapi_instrumentator
+prometheus_client
 pytest
 httpx
