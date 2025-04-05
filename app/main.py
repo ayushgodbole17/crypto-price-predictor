@@ -2,6 +2,8 @@ import logging
 from fastapi import FastAPI, Query
 from app.data_fetcher import fetch_crypto_data
 from app.model import train_model, predict_price
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 # Configure logging
 logging.basicConfig(
@@ -11,6 +13,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+instrumentator = Instrumentator().instrument(app).expose(app)
+
 
 @app.get("/")
 def home():
