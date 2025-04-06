@@ -16,7 +16,8 @@ def test_predict_linear():
     response = client.get("/predict?model_type=linear")
     json_data = response.json()
     assert response.status_code == 200
-    for key in ["prediction", "training_rmse", "testing_rmse", "model_type"]:
+    # Check that the response contains only "prediction" and "model_type" keys.
+    for key in ["prediction", "model_type"]:
         assert key in json_data
     assert json_data["model_type"] == "linear"
 
@@ -24,6 +25,6 @@ def test_predict_rf():
     response = client.get("/predict?model_type=rf")
     json_data = response.json()
     assert response.status_code == 200
-    for key in ["prediction", "training_rmse", "testing_rmse", "model_type"]:
+    for key in ["prediction", "model_type"]:
         assert key in json_data
     assert json_data["model_type"] == "rf"
