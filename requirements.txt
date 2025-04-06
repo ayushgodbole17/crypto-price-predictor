@@ -9,3 +9,4 @@ prometheus_client
 pytest
 httpx
 joblib
+streamlit
