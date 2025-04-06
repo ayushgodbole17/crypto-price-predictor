@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/d7e0f9c1de154414870f25c426fc9abd/artifacts
+end_time: 1743981830819
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d7e0f9c1de154414870f25c426fc9abd
+run_name: luxuriant-wren-768
+run_uuid: d7e0f9c1de154414870f25c426fc9abd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1743981830754
+status: 3
+tags: []
+user_id: ayushgod
