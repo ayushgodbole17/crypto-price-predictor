@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import mean_squared_error
 from math import sqrt
+import joblib
 
 def train_model(data: pd.DataFrame, model_type='linear'):
     """
@@ -30,7 +31,6 @@ def train_model(data: pd.DataFrame, model_type='linear'):
             'min_samples_split': [2, 5, 10]
         }
         rf = RandomForestRegressor(random_state=42)
-        # Use GridSearchCV for hyperparameter tuning
         grid_search = GridSearchCV(rf, param_grid, cv=3, scoring='neg_mean_squared_error', n_jobs=-1)
         grid_search.fit(X_train, y_train)
         model = grid_search.best_estimator_
@@ -46,12 +46,13 @@ def train_model(data: pd.DataFrame, model_type='linear'):
     train_rmse = sqrt(mean_squared_error(y_train, y_train_pred))
     test_rmse = sqrt(mean_squared_error(y_test, y_test_pred))
     
+    # Save the trained model to disk for later use (automated retraining)
+    joblib.dump(model, "model.pkl")
+    
     # Use the last row of the training set's features for prediction (for demonstration)
     last_features = X_train.iloc[-1].values.reshape(1, -1)
     
     return model, last_features, train_rmse, test_rmse
-
-
 
 def predict_price(model, last_features, future_days: int = 1):
     """
@@ -59,3 +60,9 @@ def predict_price(model, last_features, future_days: int = 1):
     For now, we ignore future_days and simply predict with the last row.
     """
     return model.predict(last_features)[0]
+
+def load_model(filename="model.pkl"):
+    """
+    Loads a saved model from a file.
+    """
+    return joblib.load(filename)

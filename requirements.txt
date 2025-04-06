@@ -8,3 +8,4 @@ prometheus_fastapi_instrumentator
 prometheus_client
 pytest
 httpx
+joblib
