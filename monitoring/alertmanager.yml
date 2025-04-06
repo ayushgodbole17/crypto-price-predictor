@@ -1,0 +1,20 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'default-receiver'
+
+receivers:
+- name: 'default-receiver'
+  # For testing, we won't actually send emails.
+  # You can add email_configs here later if desired.
+  email_configs:
+  - to: 'godbole.ayush@gmail.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'your_username'
+    auth_password: 'your_password'

@@ -17,5 +17,14 @@ services:
       - grafana-storage:/var/lib/grafana
     restart: always
 
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/config.yml
+    restart: always
+
+
 volumes:
   grafana-storage:
