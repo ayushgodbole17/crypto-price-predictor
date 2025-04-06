@@ -2,11 +2,13 @@ stages:
   - test
   - build
   - push
+  - retrain
   - deploy
 
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375
+
 
 # Default configuration applies to build, push, and deploy stages.
 default:
@@ -78,3 +80,14 @@ deploy_to_ec2:
       echo "docker run -d -p 80:8000 \$IMAGE_NAME" >> deploy.sh &&
       chmod +x deploy.sh &&
       ssh -i ~/.ssh/id_rsa ubuntu@$EC2_IP "bash -s" < deploy.sh
+
+
+retrain_model:
+  stage: retrain
+  image: docker:latest
+  script:
+    - IMAGE_NAME="${DOCKERHUB_USERNAME}/crypto-price-predictor:latest"
+    - docker build -t $IMAGE_NAME -f Dockerfile.retrain .
+    - docker push $IMAGE_NAME
+  only:
+    - schedules

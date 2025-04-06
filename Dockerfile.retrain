@@ -1,0 +1,17 @@
+# Dockerfile.retrain
+FROM python:3.10-slim
+
+WORKDIR /app
+# Copy all project files into the container.
+COPY . /app
+
+# Install dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run the retraining process.
+# This command imports your data_fetcher and model modules, trains the model,
+# and saves it to model.pkl. Adjust the command if needed.
+RUN python -c "from app.data_fetcher import fetch_crypto_data; from app.model import train_model; train_model(fetch_crypto_data(days=90), model_type='linear')"
+
+# Start the FastAPI application.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
