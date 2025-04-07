@@ -10,14 +10,6 @@ import mlflow
 
 
 def train_model(data: pd.DataFrame, model_type='linear'):
-    """
-    Trains a model on the provided enriched data, logs parameters and metrics with MLflow,
-    and saves the model as an artifact.
-    
-    :param data: Enriched dataframe with features (must include 'price' and e.g. 'MA_7', 'MA_30', etc.).
-    :param model_type: 'linear' for Linear Regression, 'rf' for Random Forest.
-    :return: Trained model, last feature vector (for demonstration), training RMSE, and testing RMSE.
-    """
     data = data.copy()
     features = ['MA_7', 'MA_30', 'Daily_Return', 'Volatility_7']
     
@@ -85,22 +77,8 @@ def train_model(data: pd.DataFrame, model_type='linear'):
 
 
 def predict_price(model, last_features, future_days: int = 1):
-    """
-    Predicts the price using the provided feature vector.
-    
-    :param model: Trained model ready for inference.
-    :param last_features: 2D array representing the last row of features (or any new feature vector).
-    :param future_days: (Optional) Not used in direct inference; kept for interface consistency.
-    :return: A single float prediction from the model.
-    """
     return model.predict(last_features)[0]
 
 
 def load_model(filename="model.pkl"):
-    """
-    Loads a saved model from disk.
-    
-    :param filename: Path to the model file.
-    :return: The loaded model object.
-    """
     return joblib.load(filename)
