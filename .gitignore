@@ -2,3 +2,4 @@
 venv/
 mlruns/
 mlartifacts/
+app/__pycache__/

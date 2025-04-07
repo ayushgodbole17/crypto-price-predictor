@@ -5,6 +5,10 @@ from app.data_fetcher import fetch_crypto_data
 from app.model import load_model, predict_price, train_model
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter
+from fastapi.staticfiles import StaticFiles
+
+# Mount the static directory so that index.html is served at the root URL
+
 
 # Configure logging
 logging.basicConfig(
@@ -14,6 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+app.mount("/dashboard", StaticFiles(directory="static", html=True), name="static")
 
 # Expose Prometheus metrics
 Instrumentator().instrument(app).expose(app)

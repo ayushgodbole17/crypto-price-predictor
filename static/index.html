@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Price Predictor</title>
+</head>
+<body>
+    <h1>Crypto Price Predictor Dashboard</h1>
+    <div>
+        <h2>Make a Prediction</h2>
+        <label for="model">Select Model Type:</label>
+        <select id="model">
+            <option value="linear">Linear Regression</option>
+            <option value="rf">Random Forest</option>
+        </select>
+        <button onclick="getPrediction()">Get Prediction</button>
+        <p id="predictionResult"></p>
+    </div>
+    <div>
+        <h2>Retrain the Model</h2>
+        <button onclick="retrainModel()">Retrain Model</button>
+        <p id="retrainResult"></p>
+    </div>
+    <script>
+        function getPrediction(){
+            const modelType = document.getElementById("model").value;
+            fetch(`/predict?model_type=${modelType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.error) {
+                        document.getElementById("predictionResult").innerText = "Error: " + data.error;
+                    } else {
+                        document.getElementById("predictionResult").innerText = "Prediction: " + data.prediction + ", Model: " + data.model_type;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("predictionResult").innerText = "Error: " + err;
+                });
+        }
+        function retrainModel(){
+            fetch(`/retrain`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.error) {
+                        document.getElementById("retrainResult").innerText = "Error: " + data.error;
+                    } else {
+                        document.getElementById("retrainResult").innerText = "Retrained! Training RMSE: " + data.training_rmse + ", Testing RMSE: " + data.testing_rmse;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("retrainResult").innerText = "Error: " + err;
+                });
+        }
+    </script>
+</body>
+</html>
